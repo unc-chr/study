@@ -37,6 +37,8 @@ test_condition_variable: test_condition_variable.cpp
 	g++ test_condition_variable.cpp -std=c++11 -Wl,--no-as-needed -lpthread -o test_condition_variable.out
 test_thread_pool: test_thread_pool.cpp
 	g++ test_thread_pool.cpp -std=c++11 -Wl,--no-as-needed -lpthread -o test_thread_pool.out
+thread_pool: thread_pool.cpp
+	g++ thread_pool.cpp -std=c++11 -Wl,--no-as-needed -lpthread -o thread_pool.out
 
 .PHONY: clean
 clean:
