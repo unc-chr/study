@@ -29,4 +29,6 @@ class Stock {
         void update(double price);
         void show() const;
         const Stock& topval(const Stock& s) const;
+        void test_nullptr1() const;
+        void test_nullptr2() const;
 };

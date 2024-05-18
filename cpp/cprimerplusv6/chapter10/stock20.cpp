@@ -90,3 +90,16 @@ const Stock& Stock::topval(const Stock& s) const {
         return *this;
     }
 }
+
+void Stock::test_nullptr1() const {
+    using std::cout;
+    using std::endl;
+    cout << "test_nullptr1" << endl;
+}
+
+void Stock::test_nullptr2() const {
+    using std::cout;
+    using std::endl;
+    cout << "company: " << company << endl;
+    show();
+}
