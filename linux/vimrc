@@ -1,0 +1,123 @@
+" coding
+set fileencodings=ucs-bom,utf-8,gbk,gb2312,cp936,gb18030,big5,latin-1
+set encoding=utf-8
+set termencoding=utf-8
+set fileencoding=utf-8
+
+" basic setting
+" show row number
+set nu
+
+" highligting syntax
+syntax on
+
+" tab as 4 space
+set ts=4
+set expandtab
+set shiftwidth=4
+
+" auto indent
+set autoindent
+
+" detect file type
+filetype on
+" load filetype plugin
+filetype plugin on
+
+" auto match
+set complete=.,w,b,u,t,i
+
+" filetype header
+autocmd BufNewFile *.[ch],*.hpp,*.cpp,Makefile,*.mk,*.sh,*.py exec ":call SetTitle()"
+" 加入注释 
+func SetComment()
+    call setline(1,"/*================================================================") 
+    call append(line("."),   "*   Copyright (C) ".strftime("%Y")." Goldman Ltd. All rights reserved.")
+    call append(line(".")+1, "*   ") 
+    call append(line(".")+2, "*   File：".expand("%:t")) 
+    call append(line(".")+3, "*   Author：leekaihua")
+    call append(line(".")+4, "*   Date：".strftime("%Y年%m月%d日")) 
+    call append(line(".")+5, "*   Brife：") 
+    call append(line(".")+6, "*")
+    call append(line(".")+7, "")
+    call append(line(".")+8, "")
+    call append(line(".")+9, "")
+    call append(line(".")+10, "*/")
+endfunc
+     
+" 加入shell,Makefile注释
+func SetComment_sh()
+    call setline(3, "#================================================================") 
+    call setline(4, "#   Copyright (C) ".strftime("%Y")." Goldman Ltd. All rights reserved.")
+    call setline(5, "#   ") 
+    call setline(6, "#   File：".expand("%:t")) 
+    call setline(7, "#   Author：leekaihua")
+    call setline(8, "#   Date：".strftime("%Y年%m月%d日")) 
+    call setline(9, "#   Brife：") 
+    call setline(10, "#")
+    call setline(11, "#================================================================")
+    call setline(12, "")
+    call setline(13, "")
+endfunc 
+
+" 加入python注释
+func SetComment_py()
+    call setline(3, "") 
+    call setline(4, "#================================================================") 
+    call setline(5, "#   Copyright (C) ".strftime("%Y")." Goldman Ltd. All rights reserved.")
+    call setline(6, "#   ") 
+    call setline(7, "#   File：".expand("%:t")) 
+    call setline(8, "#   Author：leekaihua")
+    call setline(9, "#   Date：".strftime("%Y年%m月%d日")) 
+    call setline(10, "#   Brife：") 
+    call setline(11, "#")
+    call setline(12, "#================================================================")
+    call setline(13, "")
+    call setline(14, "")
+endfunc 
+
+" 定义函数SetTitle，自动插入文件头 
+func SetTitle()
+    if &filetype == 'make' 
+        call setline(1,"") 
+        call setline(2,"")
+        call SetComment_sh()
+
+    elseif &filetype == 'sh' 
+        call setline(1,"#!/bin/bash") 
+        call setline(2,"")
+        call SetComment_sh()
+
+    elseif expand("%:e") == 'py' 
+        call setline(1,"#!usr/bin/env python3") 
+        call setline(2,"# -*- coding:utf-8 -*-") 
+        call SetComment_py()
+        
+    else
+        call SetComment()
+        if expand("%:e") == 'hpp' 
+            call append(line(".")+11, "#ifndef _".toupper(expand("%:t:r"))."_H") 
+            call append(line(".")+12, "#define _".toupper(expand("%:t:r"))."_H") 
+            call append(line(".")+13, "#ifdef __cplusplus") 
+            call append(line(".")+14, "extern \"C\"") 
+            call append(line(".")+15, "{") 
+            call append(line(".")+16, "#endif") 
+            call append(line(".")+17, "") 
+            call append(line(".")+18, "#ifdef __cplusplus") 
+            call append(line(".")+19, "}") 
+            call append(line(".")+20, "#endif") 
+            call append(line(".")+21, "#endif //".toupper(expand("%:t:r"))."_H") 
+            
+        elseif expand("%:e") == 'h' 
+            call append(line(".")+11, "#pragma once") 
+
+        elseif &filetype == 'c' 
+            call append(line(".")+11,"#include \"".expand("%:t:r").".h\"") 
+            
+        elseif &filetype == 'cpp' 
+            call append(line(".")+11, "#include \"".expand("%:t:r").".h\"") 
+
+        endif
+    endif
+endfunc
+
