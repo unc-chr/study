@@ -1,0 +1,29 @@
+
+
+#================================================================
+#   Copyright (C) 2024 Goldman Ltd. All rights reserved.
+#   
+#   File：Makefile
+#   Author：leekaihua
+#   Date：2024年05月17日
+#   Brife：
+#
+#================================================================
+
+OBJS = add.o sub.o mul.o div.o test.o
+TARGET = test
+
+${TARGET}: ${OBJS}
+	gcc $^ -o $@
+
+add.o: add.c
+	gcc $^ -c -o $@
+sub.o: sub.c
+	gcc $^ -c -o $@
+mul.o: mul.c
+	gcc $^ -c -o $@
+div.o: div.c
+	gcc $^ -c -o $@
+
+clean:
+	rm -rf ${OBJS} ${TARGET}

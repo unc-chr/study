@@ -36,5 +36,14 @@ int main() {
     std::cout << "\nMost Valuable holding:\n";
     top->show();
 
+    std::cout << "test_nullptr out:" << std::endl;
+    top->test_nullptr1();
+    top->test_nullptr2();
+
+    std::cout << "test_nullptr out with nullptr:" << std::endl;
+    const Stock* test_stock = nullptr;
+    test_stock->test_nullptr1();
+    test_stock->test_nullptr2();
+
     return 0;
 }
