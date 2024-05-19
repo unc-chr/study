@@ -1,0 +1,14 @@
+
+
+#================================================================
+#   Copyright (C) 2024 Goldman Ltd. All rights reserved.
+#   
+#   File：Makefile
+#   Author：leekaihua
+#   Date：2024年05月17日
+#   Brife：
+#
+#================================================================
+
+test: add.c sub.c mul.c div.c test.c
+	gcc add.c sub.c mul.c div.c test.c -o test
