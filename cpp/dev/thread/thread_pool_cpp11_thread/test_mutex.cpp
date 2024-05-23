@@ -13,27 +13,28 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
+#include <chrono>
 
 using namespace std;
 mutex mtx;
 
 int shared_data = 0;
 void func() {
-    for (int i = 0; i < 10000000; ++i) {
-        mtx.lock();
+    for (int i = 0; i < 100000; ++i) {
+        // mtx.lock();
         shared_data++;
-        mtx.unlock();
+        // mtx.unlock();
     }
 }
 int main() {
+    auto start = std::chrono::high_resolution_clock::now();
     std::thread t1(func);
     std::thread t2(func);
-    std::thread t3(func);
-    std::thread t4(func);
     t1.join();
     t2.join();
-    t3.join();
-    t4.join();
+    auto end = std::chrono::high_resolution_clock::now();
     std::cout << "shared_data = " << shared_data << std::endl;    
+    std::chrono::duration<double> elapsed = end - start;
+    std::cout << elapsed.count() << std::endl;
     return 0;
 }

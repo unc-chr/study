@@ -39,6 +39,12 @@ test_thread_pool: test_thread_pool.cpp
 	g++ test_thread_pool.cpp -std=c++11 -Wl,--no-as-needed -lpthread -o test_thread_pool.out
 thread_pool: thread_pool.cpp
 	g++ thread_pool.cpp -std=c++11 -Wl,--no-as-needed -lpthread -o thread_pool.out
+test_async_future: test_async_future.cpp
+	g++ test_async_future.cpp -std=c++11 -Wl,--no-as-needed -lpthread -o test_async_future.out
+test_async_promise: test_async_promise.cpp
+	g++ test_async_promise.cpp -std=c++11 -Wl,--no-as-needed -lpthread -o test_async_promise.out
+test_atomic: test_atomic.cpp
+	g++ test_atomic.cpp -std=c++11 -Wl,--no-as-needed -lpthread -o test_atomic.out
 
 .PHONY: clean
 clean:

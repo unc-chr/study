@@ -26,6 +26,10 @@
 *.mod
 *.smod
 
+# Compiled middle files
+*.i
+*.s
+
 # Compiled Static libraries
 *.lai
 *.la
