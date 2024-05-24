@@ -12,8 +12,11 @@
 
 CC=gcc
 CFLAGS=-o
+WRAP_DIR=/home/lkh/study/APUE/wrapped_func
 
-all: tcp_server tcp_client
+all: single_process multi_process
+
+single_process: tcp_server tcp_client
 
 tcp_server: tcp_server.c
 	${CC} $^ -o $@.out
@@ -21,6 +24,11 @@ tcp_server: tcp_server.c
 tcp_client: tcp_client.c
 	${CC} $^ -o $@.out
 
+multi_process: tcp_client tcp_server_multi_process
+
+tcp_server_multi_process: tcp_server_multi_process.c
+	${CC} $^ ${WRAP_DIR}/wrap_sys.c ${WRAP_DIR}/wrap_err.c ${WRAP_DIR}/wrap_sig.c -o $@.out
+
 .PHONY:clean
 clean:
-	rm tcp_server.out tcp_client.out
+	rm *.out
