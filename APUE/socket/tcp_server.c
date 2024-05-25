@@ -25,7 +25,7 @@ int main() {
     // bind ip and port
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(8080);
+    addr.sin_port = htons(8000);
     inet_pton(AF_INET, "192.168.58.130", &addr.sin_addr.s_addr);
     int ret = bind(lfd, (struct sockaddr*)&addr, sizeof(addr));
     if (ret < 0) {

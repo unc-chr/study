@@ -14,6 +14,7 @@
 
 int Inet_pton(int af, const char* src, void* dst) {
     int ret = -1;
+    ret = inet_pton(af, src, dst);
     if (1 == ret) {
         return ret;
     } else if (0 == ret) {

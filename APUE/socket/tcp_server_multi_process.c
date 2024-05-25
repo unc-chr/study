@@ -16,10 +16,16 @@
 #include "../wrapped_func/wrap_sig.h"
 
 #include <signal.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
 #define SIZE 144
+#define EXIT_CMD "exit\n"
+
+int cmp(char* src, char* dest) {
+
+}
 
 void do_work(int fd) {
     char buf_read[SIZE];
@@ -29,6 +35,9 @@ void do_work(int fd) {
         // reading from client
         printf("reading from client:\n");
         ret = Read(fd, buf_read, SIZE);
+        if (strcmp(buf_read, EXIT_CMD, strlen(EXIT_CMD)) == 0) {
+            break;
+        }
         printf("%s\n", buf_read);
         // writing to client
         memset(buf_write, 0, sizeof(buf_write));
@@ -60,6 +69,7 @@ int main() {
 
     // create socket
     int lfd = Socket(AF_INET, SOCK_STREAM, 0);
+    printf("Socket\n");
 
     // bind
     struct sockaddr_in addr;
@@ -67,16 +77,22 @@ int main() {
     addr.sin_port = htons(8000);
     ret = Inet_pton(AF_INET, "192.168.58.130", &addr.sin_addr.s_addr);
     ret = Bind(lfd, (struct sockaddr*)&addr, sizeof(addr));
+    printf("Bind\n");
 
     // listen
     ret = Listen(lfd, 25);
+    printf("Listen\n");
 
     // accept incoming connect, fork child process and do work
     struct sockaddr_in cli_addr;
     socklen_t len = sizeof(cli_addr);
+    char ip[16] = "";
     while (1) {
         // accept
         int cfd = Accept(lfd, (struct sockaddr*)&cli_addr, &len);
+        printf("new client ip=%s port=%d\n", 
+                inet_ntop(AF_INET, &cli_addr.sin_addr.s_addr, ip, 16),
+                ntohs(cli_addr.sin_port));
         // fork
         pid_t pid = fork();
         if (-1 == pid) {
