@@ -12,7 +12,7 @@
 #ifndef __WRAP_SIG_H
 #define __WRAP_SIG_H
 
-#include "wrap_err.h"
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>

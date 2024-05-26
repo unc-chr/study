@@ -5,19 +5,18 @@
 #   
 #   File：Makefile
 #   Author：leekaihua
-#   Date：20240524
+#   Date：20240523
 #   Brife：
 #
 #================================================================
 
-all: wrap_sys wrap_sig
+CC=gcc
+CFLAGS=-o
+WRAP_DIR=/home/lkh/study/APUE/wrapped_func
 
-wrap_sys: wrap_sys.c
-	gcc $^ -c -o $@.o
-
-wrap_sig: wrap_sig.c
-	gcc $^ -c -o $@.o
+select: select.c
+	${CC} $^ ${WRAP_DIR}/wrap_sys.c ${WRAP_DIR}/wrap_sig.c -o $@.out
 
 .PHONY:clean
 clean:
-	rm *.o
+	rm *.out

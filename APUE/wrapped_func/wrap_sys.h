@@ -13,14 +13,14 @@
 #ifndef __WRAP_SYS_H
 #define __WRAP_SYS_H
 
-#include "wrap_err.h"
-
 #include <arpa/inet.h>
+#include <errno.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 int Inet_pton(int af, const char* src, void* dst);
 const char* Inet_ntop(int af, const void* src, char* dst, socklen_t size);

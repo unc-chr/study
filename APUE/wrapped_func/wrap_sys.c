@@ -21,14 +21,14 @@ int Inet_pton(int af, const char* src, void* dst) {
         printf("inet_pton error: IP address illegal.\n");
         exit(1);
     } else if (-1 == ret) {
-        Perror("inet_pton error");
+        perror("inet_pton error");
     }
 }
 
 const char* Inet_ntop(int af, const void* src, char* dst, socklen_t size) {
     const char* dest = inet_ntop(af, src, dst, size);
     if (NULL == dest) {
-        Perror("inet_ntop error");
+        perror("inet_ntop error");
     }
     return dest;
 }
@@ -36,7 +36,7 @@ const char* Inet_ntop(int af, const void* src, char* dst, socklen_t size) {
 int Socket(int family, int type, int protocol) {
     int ret;
     if ((ret = socket(family, type, protocol)) < 0) {
-        Perror("socket error");
+        perror("socket error");
     }
     return ret;
 }
@@ -44,7 +44,7 @@ int Socket(int family, int type, int protocol) {
 int Connect(int sock_fd, const struct sockaddr* addr, socklen_t addrlen) {
     int ret;
     if ((ret = connect(sock_fd, addr, addrlen)) < 0) {
-        Perror("connect error");
+        perror("connect error");
     }
     return ret;
 }
@@ -52,7 +52,7 @@ int Connect(int sock_fd, const struct sockaddr* addr, socklen_t addrlen) {
 int Bind(int sock_fd, const struct sockaddr* addr, socklen_t addrlen) {
     int ret;
     if ((ret = bind(sock_fd, addr, addrlen)) < 0) {
-        Perror("bind error");
+        perror("bind error");
     }
     return ret;
 }
@@ -60,7 +60,7 @@ int Bind(int sock_fd, const struct sockaddr* addr, socklen_t addrlen) {
 int Listen(int fd, int backlog) {
     int ret;
     if ((ret = listen(fd, backlog)) < 0) {
-        Perror("listen error");
+        perror("listen error");
     }
     return ret;
 }
@@ -75,7 +75,7 @@ again:
         if ((errno == ECONNABORTED) || (errno == EINTR)) {
             goto again;
         } else {
-            Perror("accept error");
+            perror("accept error");
         }
     }
     return cfd;
@@ -97,7 +97,7 @@ again:
 }
 
 ssize_t Write(int fd, const void* buf, size_t count) {
-    ssize_t n;
+    ssize_t n = -1;
 again:
     if ((n = write(fd, buf, count)) == -1) {
         if (errno == EINTR) {
