@@ -66,7 +66,7 @@ int Listen(int fd, int backlog) {
 }
 
 // return: file descriptor
-int Accept(int sock_fd, struct sockaddr* addr, socklen_t* addrlen) {
+int Accept(int sock_fd, struct sockaddr* addr, socklen_t* addrlen, int show_info) {
     int cfd;
 again:
     if ((cfd = accept(sock_fd, addr, addrlen)) < 0) {
@@ -77,6 +77,13 @@ again:
         } else {
             perror("accept error");
         }
+    }
+    if (show_info) {
+        char ip[16] = "";
+        struct sockaddr_in* peer_addr = (struct sockaddr_in*)addr;
+        printf("new peer client ip=%s port=%d\n",
+                inet_ntop(AF_INET, &(peer_addr->sin_addr.s_addr), ip, 16),
+                ntohs(peer_addr->sin_port));
     }
     return cfd;
 }
@@ -202,8 +209,13 @@ ssize_t Readline(int fd, void* buf, size_t maxlen) {
 }
 
 int tcp4_bind(short port, const char* IP) {
-    struct sockaddr_in serv_addr;
     int lfd = Socket(AF_INET, SOCK_STREAM, 0);
+    if (-1 == lfd) {
+        perror("socket error");
+        return lfd;
+    }
+
+    struct sockaddr_in serv_addr;
     memset(&serv_addr, 0, sizeof(serv_addr));
     if (IP == NULL) {
         serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -217,6 +229,10 @@ int tcp4_bind(short port, const char* IP) {
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(port);
 
-    Bind(lfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-    return lfd;
+    int ret = Bind(lfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+    if (ret < 0) {
+        return ret;
+    } else {
+        return lfd;
+    }
 }
