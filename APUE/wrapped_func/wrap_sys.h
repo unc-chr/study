@@ -13,14 +13,14 @@
 #ifndef __WRAP_SYS_H
 #define __WRAP_SYS_H
 
-#include "wrap_err.h"
-
 #include <arpa/inet.h>
+#include <errno.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 int Inet_pton(int af, const char* src, void* dst);
 const char* Inet_ntop(int af, const void* src, char* dst, socklen_t size);
@@ -30,7 +30,7 @@ int Connect(int sock_fd, const struct sockaddr* addr, socklen_t addrlen);
 
 int Bind(int sock_fd, const struct sockaddr* addr, socklen_t addrlen);
 int Listen(int fd, int backlog);
-int Accept(int sock_fd, struct sockaddr* addr, socklen_t* addrlen);
+int Accept(int sock_fd, struct sockaddr* addr, socklen_t* addrlen, int show_flag);
 
 ssize_t Read(int fd, void* buf, size_t count);
 ssize_t Write(int fd, const void* buf, size_t count);

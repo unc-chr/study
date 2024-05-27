@@ -14,20 +14,21 @@
 
 int Inet_pton(int af, const char* src, void* dst) {
     int ret = -1;
+    ret = inet_pton(af, src, dst);
     if (1 == ret) {
         return ret;
     } else if (0 == ret) {
         printf("inet_pton error: IP address illegal.\n");
         exit(1);
     } else if (-1 == ret) {
-        Perror("inet_pton error");
+        perror("inet_pton error");
     }
 }
 
 const char* Inet_ntop(int af, const void* src, char* dst, socklen_t size) {
     const char* dest = inet_ntop(af, src, dst, size);
     if (NULL == dest) {
-        Perror("inet_ntop error");
+        perror("inet_ntop error");
     }
     return dest;
 }
@@ -35,7 +36,7 @@ const char* Inet_ntop(int af, const void* src, char* dst, socklen_t size) {
 int Socket(int family, int type, int protocol) {
     int ret;
     if ((ret = socket(family, type, protocol)) < 0) {
-        Perror("socket error");
+        perror("socket error");
     }
     return ret;
 }
@@ -43,7 +44,7 @@ int Socket(int family, int type, int protocol) {
 int Connect(int sock_fd, const struct sockaddr* addr, socklen_t addrlen) {
     int ret;
     if ((ret = connect(sock_fd, addr, addrlen)) < 0) {
-        Perror("connect error");
+        perror("connect error");
     }
     return ret;
 }
@@ -51,7 +52,7 @@ int Connect(int sock_fd, const struct sockaddr* addr, socklen_t addrlen) {
 int Bind(int sock_fd, const struct sockaddr* addr, socklen_t addrlen) {
     int ret;
     if ((ret = bind(sock_fd, addr, addrlen)) < 0) {
-        Perror("bind error");
+        perror("bind error");
     }
     return ret;
 }
@@ -59,13 +60,13 @@ int Bind(int sock_fd, const struct sockaddr* addr, socklen_t addrlen) {
 int Listen(int fd, int backlog) {
     int ret;
     if ((ret = listen(fd, backlog)) < 0) {
-        Perror("listen error");
+        perror("listen error");
     }
     return ret;
 }
 
 // return: file descriptor
-int Accept(int sock_fd, struct sockaddr* addr, socklen_t* addrlen) {
+int Accept(int sock_fd, struct sockaddr* addr, socklen_t* addrlen, int show_info) {
     int cfd;
 again:
     if ((cfd = accept(sock_fd, addr, addrlen)) < 0) {
@@ -74,8 +75,15 @@ again:
         if ((errno == ECONNABORTED) || (errno == EINTR)) {
             goto again;
         } else {
-            Perror("accept error");
+            perror("accept error");
         }
+    }
+    if (show_info) {
+        char ip[16] = "";
+        struct sockaddr_in* peer_addr = (struct sockaddr_in*)addr;
+        printf("new peer client ip=%s port=%d\n",
+                inet_ntop(AF_INET, &(peer_addr->sin_addr.s_addr), ip, 16),
+                ntohs(peer_addr->sin_port));
     }
     return cfd;
 }
@@ -96,7 +104,7 @@ again:
 }
 
 ssize_t Write(int fd, const void* buf, size_t count) {
-    ssize_t n;
+    ssize_t n = -1;
 again:
     if ((n = write(fd, buf, count)) == -1) {
         if (errno == EINTR) {
@@ -201,8 +209,13 @@ ssize_t Readline(int fd, void* buf, size_t maxlen) {
 }
 
 int tcp4_bind(short port, const char* IP) {
-    struct sockaddr_in serv_addr;
     int lfd = Socket(AF_INET, SOCK_STREAM, 0);
+    if (-1 == lfd) {
+        perror("socket error");
+        return lfd;
+    }
+
+    struct sockaddr_in serv_addr;
     memset(&serv_addr, 0, sizeof(serv_addr));
     if (IP == NULL) {
         serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -216,6 +229,10 @@ int tcp4_bind(short port, const char* IP) {
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(port);
 
-    Bind(lfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-    return lfd;
+    int ret = Bind(lfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+    if (ret < 0) {
+        return ret;
+    } else {
+        return lfd;
+    }
 }

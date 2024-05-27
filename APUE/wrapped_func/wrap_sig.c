@@ -45,7 +45,7 @@ int Sigaction(int signum,
     int ret = -1;
     ret = sigaction(signum, act, oldact);
     if (-1 == ret) {
-        Perror("sigaction error");
+        perror("sigaction error");
     }
     return ret;
 }
