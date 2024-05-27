@@ -30,7 +30,7 @@ int Connect(int sock_fd, const struct sockaddr* addr, socklen_t addrlen);
 
 int Bind(int sock_fd, const struct sockaddr* addr, socklen_t addrlen);
 int Listen(int fd, int backlog);
-int Accept(int sock_fd, struct sockaddr* addr, socklen_t* addrlen);
+int Accept(int sock_fd, struct sockaddr* addr, socklen_t* addrlen, int show_flag);
 
 ssize_t Read(int fd, void* buf, size_t count);
 ssize_t Write(int fd, const void* buf, size_t count);
