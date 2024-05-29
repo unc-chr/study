@@ -23,14 +23,16 @@ void func1() {
     mtx1.lock();
     std::this_thread::sleep_for(std::chrono::seconds(1));
     mtx2.lock();
+    cout << "func1" << endl;
     mtx1.unlock();
     mtx2.unlock();
 }
 
 void func2() {
-    mtx1.lock();
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     mtx2.lock();
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    mtx1.lock();
+    cout << "func2" << endl;
     mtx1.unlock();
     mtx2.unlock();
 }
