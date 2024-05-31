@@ -60,16 +60,18 @@ namespace lee {
                         });
                     }
                 }
-~ThreadPool() {
-    {
-        std::unique_lock<mutex> lock(mtx);
-        m_stop = true;
-    }
-    cv.notify_all();
-    for (auto& t : threads) {
-        t.join();
-    }
-}
+
+                ~ThreadPool() {
+                    {
+                        std::unique_lock<mutex> lock(mtx);
+                        m_stop = true;
+                    }
+                    cv.notify_all();
+                    for (auto& t : threads) {
+                        t.join();
+                    }
+                }
+
             public:
                 template <typename F, typename... Args>
                 void commit(F&& f, Args... args) {
