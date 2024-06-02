@@ -11,15 +11,15 @@
 #================================================================
 
 CPP=g++
-CPPFALGS=-Wall -g
+CPPFALGS=-Wall -g -std=c++17
 
 all: threadpool test 
 
 test: test_thread_pool.cpp
-	${CPP} $^ threadpool.o -pthread ${CPPFALGS} -o $@.out
+	${CPP} $^ ${CPPFALGS} threadpool.o -pthread -o $@.out
 
 threadpool:threadpool.cpp
-	${CPP} $^ ${CPPFALGS} -c -o $@.o
+	${CPP} $^ ${CPPFALGS} -pthread -c -o $@.o
 
 .PHONY:clean
 clean:
