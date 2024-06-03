@@ -12,9 +12,15 @@
 CPP=g++
 CPPFLAGS=-Wall -g -std=c++11
 
-all:tsp 
+all:tsp tlr
 
 tsp: test_smart_ptr.cpp
+	${CPP} $^ ${CPPFLAGS} -o $@.out
+
+tlr: test_loop_reference.cpp
+	${CPP} $^ ${CPPFLAGS} -o $@.out
+
+tlrS: test_loop_reference_SharedPtr.cpp
 	${CPP} $^ ${CPPFLAGS} -o $@.out
 
 .PHONY:clean
