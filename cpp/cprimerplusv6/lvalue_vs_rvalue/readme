@@ -1,0 +1,6 @@
+test_rvalue.cpp
+    what is rvalue, and how rvalue behave.
+test_rvalue_ref_bad_case.cpp
+    bad case. only copy constructor, three memory copy and three release.
+test_rvalue_ref_v1.cpp
+    version 1 improve.
