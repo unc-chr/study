@@ -13,9 +13,9 @@
 CPP=g++
 CPPFALGS=-Wall -g -std=c++17
 
-all: threadpool test 
+all: threadpool ttp
 
-test: test_thread_pool.cpp
+ttp: test_thread_pool.cpp
 	${CPP} $^ ${CPPFALGS} threadpool.o -pthread -o $@.out
 
 threadpool:threadpool.cpp

@@ -20,8 +20,8 @@ namespace util {
         WeakPtr() : data_(nullptr), count_(nullptr) {}
         // 为了直接访问 private 成员，需要申明友元类
         WeakPtr(const SharedPtr<T>& sp) : data_(sp.data_), count_(sp.count_) {}
-        WeakPtr(const WeakPtr<T>& other) : data_(other.data_), count(other.count_) {}
-        Weakptr(WeakPtr<T>&& other) {
+        WeakPtr(const WeakPtr<T>& other) : data_(other.data_), count_(other.count_) {}
+        WeakPtr(WeakPtr<T>&& other) {
             data_ = other.data_;
             count_ = other.count_;
             other.data_ = nullptr;
@@ -36,7 +36,7 @@ namespace util {
             count_ = nullptr;
         }
         bool expired() {
-            return !count_ || (*count_) <= 0
+            return !count_ || (*count_) <= 0;
         }
         SharedPtr<T> lock() const {
             if (expired()) {
@@ -71,7 +71,7 @@ namespace util {
         }
 
         WeakPtr& operator=(const WeakPtr<T>&& sp) {
-            if (this == &other) {
+            if (this == &sp) {
                 return *this;
             }
             data_ = sp.data_;
@@ -91,6 +91,6 @@ namespace util {
     private:
         T* data_;
         int* count_;
-    }
+    };
 }
 }

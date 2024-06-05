@@ -40,6 +40,7 @@ ThreadPool::ThreadPool()
 
 ThreadPool::~ThreadPool() {
     is_pool_running_ = false;
+    std::unique_lock<std::mutex> lock(task_queue_mtx);
     // 线程有两种状态（1）阻塞（2）执行任务中
     // 唤醒所有的线程，
     // 如果还有任务没有执行完毕，则执行任务。
@@ -49,7 +50,6 @@ ThreadPool::~ThreadPool() {
     // 等待线程池中所有的线程返回
     // 条件变量 exit_cond 有通知，且 thread_workers.size() == 0
     // 那么就是可以退出了。
-    std::unique_lock<std::mutex> lock(task_queue_mtx);
     exit_cond_.wait(lock, [&]()->bool {return thread_workers.size() == 0;});
 }
 
@@ -147,15 +147,31 @@ bool ThreadPool::check_running_state() const {
 void ThreadPool::thread_func(int thread_id) {
     // 死循环，执行工作的线程要一直待命
     auto last_time = std::chrono::high_resolution_clock().now();
-    while (is_pool_running_) {
+
+    // 所有任务必须执行完成，线程池才可以回收所有线程资源
+    while (true) {
         std::shared_ptr<Task> job;
         {
             // 获取锁
+            std::cout << "tid: " << std::this_thread::get_id() << " waitting lock" << std::endl;
             std::unique_lock<std::mutex> lock(task_queue_mtx);
+            std::cout << "tid: " << std::this_thread::get_id() << " got a lock" << std::endl;
             std::cout << "tid: " << std::this_thread::get_id()
                     << " trying get a job." << std::endl;
 
             while (task_queue.size() == 0) {
+                if (!is_pool_running_) {
+                    // 如果是执行任务中的线程，执行完发现 is_pool_running_ 为 false。
+                    // 进入这个逻辑执行线程的销毁
+                    thread_workers.erase(thread_id);
+                    thread_workers_curr_size_--;
+                    thread_workers_idle_size_--;
+                    std::cout << "thread_id: " << std::this_thread::get_id() 
+                            << " finish job, and destroyed." << std::endl;
+                    exit_cond_.notify_all();
+                    return;
+                }
+
                 // cached 模式下，有可能已经创建了很多线程
                 // 空闲时间超过 60s，应该把多余的线程(超过thread_workers_init_size的)结束回收掉
                 if (pool_mode_ == ThreadPoolMode::MODE_CACHED) {
@@ -185,29 +201,15 @@ void ThreadPool::thread_func(int thread_id) {
                     // 等待 not_empty 条件变量通知
                     not_empty.wait(lock);
                 }
-                // 线程池要结束，回收线程资源
-                // 如果是等待中的线程因为线程池要结束而被唤醒，会进入这个逻辑
-                if (!is_pool_running_) {
-                    thread_workers.erase(thread_id);
-                    thread_workers_curr_size_--;
-                    thread_workers_idle_size_--;
-                    std::cout << "thread_id: " << std::this_thread::get_id() 
-                            << " break waitting, now destroyed." << std::endl;
-                    // 此次通知，实质上只是当前线程销毁了，要 exit_cond 尝试一下是否可以退出等待
-                    // 真正退出等待，需要所有的线程销毁，也就是 thread_workers.size() == 0
-                    exit_cond_.notify_all();
-                    return;
-                }
             }
-
-            thread_workers_idle_size_--;
-            std::cout << "tid: " << std::this_thread::get_id()
-                    << " got a job." << std::endl;
 
             // 如果不空，取一个任务出来
             job = task_queue.front();
             task_queue.pop();
             task_size_--;
+            thread_workers_idle_size_--;
+            std::cout << "tid: " << std::this_thread::get_id()
+                    << " got a job." << std::endl;
 
             // 如果依然有剩余任务，继续通知其他线程执行任务
             if (task_queue.size() > 0) {
@@ -231,14 +233,6 @@ void ThreadPool::thread_func(int thread_id) {
         thread_workers_idle_size_++;
     }
 
-    // 如果是执行任务中的线程，执行完发现 is_pool_running_ 为 false。
-    // 进入这个逻辑执行线程的销毁
-    thread_workers.erase(thread_id);
-    thread_workers_curr_size_--;
-    thread_workers_idle_size_--;
-    std::cout << "thread_id: " << std::this_thread::get_id() 
-            << " finish job, and destroyed." << std::endl;
-    exit_cond_.notify_all();
 }
 
 //////////////// 线程方法实现 ////////////////
