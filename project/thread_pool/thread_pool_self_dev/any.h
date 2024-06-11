@@ -19,8 +19,8 @@ public:
     Any() = default;
     ~Any() = default;
     Any(const Any&) = delete;
-    Any(Any&&) = default;
     Any& operator=(Any&) = delete;
+    Any(Any&&) = default;
     Any& operator=(Any&&) = default;
 
     template<typename T>

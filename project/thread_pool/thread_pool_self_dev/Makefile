@@ -11,9 +11,12 @@
 #================================================================
 
 CPP=g++
-CPPFLAGS=-Wall -g -std=c++14
+CPPFLAGS=-Wall -g -std=c++17
 
-all:any
+all:any main
+
+main: test_main.cpp thread_pool.cpp task.cpp result.cpp
+	${CPP} $^ ${CPPFLAGS} -pthread -o $@.out
 
 any:test_any.cpp
 	${CPP} $^ ${CPPFLAGS} -o $@.out
