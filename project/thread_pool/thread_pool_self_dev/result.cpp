@@ -29,7 +29,7 @@ void Result::set_info(const std::string& info) {
 }
 
 // 存储任务结果
-void Result::set_res(Any&& any) {
+void Result::set_res(Any any) {
     any_ = std::move(any);
     sem_.post();
     set_info("task done!");

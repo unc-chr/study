@@ -37,7 +37,7 @@ public:
 
     void get_info();
     void set_info(const std::string& info);
-    void set_res(Any&&);
+    void set_res(Any);
     Any get_res();
 
 private:

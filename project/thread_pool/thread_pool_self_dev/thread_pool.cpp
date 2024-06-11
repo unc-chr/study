@@ -40,7 +40,7 @@ Result ThreadPool::submit_task(std::shared_ptr<Task> task) {
         while (is_task_queue_full()) {
             cv_not_full.wait(lock);
         }
-        task_queue_.push(task);
+        task_queue_.emplace(task);
         // 出作用域，释放锁
     }
     // 通知消费者

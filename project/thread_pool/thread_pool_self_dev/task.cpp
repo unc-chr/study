@@ -17,6 +17,7 @@ uint32_t Task::count_ = 0;
 Task::Task() {
     count_++;
     number_ = count_;
+    result_ = nullptr;
 }
 
 uint32_t Task::get_task_num() {
@@ -24,8 +25,9 @@ uint32_t Task::get_task_num() {
 }
 
 void Task::exec() {
-    Any temp = run();
-    result_->set_res(std::move(temp));
+    if (result_ != nullptr) {
+        result_->set_res(run());
+    }
 }
 
 void Task::set_result(Result* result) {
