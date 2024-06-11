@@ -29,12 +29,23 @@ private:
     int age_;
 };
 
+Any add(int a, int b) {
+    return a + b;
+}
+
 int main() {
     Any a = Any(5);
     std::cout << a.any_cast<int>() << std::endl;
+
     a = Any(3.14);
     std::cout << a.any_cast<double>() << std::endl;
+
     a = Any(Person());
     std::cout << a.any_cast<Person>() << std::endl;
+
+    Any any = add(1, 2);
+    int any_value = any.any_cast<int>();
+    std::cout << any_value << std::endl;
+
     return 0;
 }

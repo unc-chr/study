@@ -5,21 +5,16 @@
 #   
 #   File：Makefile
 #   Author：leekaihua
-#   Date：20240610
+#   Date：20240611
 #   Brife：
 #
 #================================================================
 
-CPP=g++
-CPPFLAGS=-Wall -g -std=c++17
 
-all:any main
+all:main
 
-main: test_main.cpp thread_pool.cpp task.cpp result.cpp
-	${CPP} $^ ${CPPFLAGS} -pthread -o $@.out
-
-any:test_any.cpp
-	${CPP} $^ ${CPPFLAGS} -o $@.out
+main:test_main.cpp a.cpp b.cpp
+	g++ $^ -std=c++11 -o $@.out
 
 .PHONY:clean
 clean:
