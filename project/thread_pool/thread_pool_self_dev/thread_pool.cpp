@@ -105,9 +105,13 @@ Result ThreadPool::submit_task(std::shared_ptr<Task> task) {
             std::cerr << "submit failed" << std::endl;
             return Result(task, "submit failed!", false);
         }
+<<<<<<< HEAD
         // 提交任务
         task_queue_.emplace(task);
         task_queue_curr_size_++;
+=======
+        task_queue_.emplace(task);
+>>>>>>> ea0b157a383426cc37a838bc57a6cd57af61813b
         // 出作用域，释放锁
     }
     // 通知消费者
