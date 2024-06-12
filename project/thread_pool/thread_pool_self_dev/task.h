@@ -12,8 +12,6 @@
 */
 #pragma once
 
-#include <iostream>
-
 #include "any.h"
 #include "result.h"
 
@@ -22,17 +20,20 @@ class Result;
 class Task {
 public:
     Task();
+    virtual ~Task() = default;
+
     // 派生类进行具体的实现
     virtual Any run() = 0;
 
     // 返回任务编号
     uint32_t get_task_num();
 
-    // 实际的执行函数，是 subtask 的 run 函数
+    // task 的执行函数，内部调用 SubTask 的 run 函数。
     // 函数的执行结果，存储到任务反馈中。
     void exec();
 
-    // 设置 Result 对象，和 Result 关联起来
+    // 设置任务的反馈结果，也就是 task 和 result 关联起来
+    // 每个任务都有一个反馈
     void set_result(Result* result);
 
 private:

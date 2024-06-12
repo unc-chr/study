@@ -13,13 +13,21 @@
 CPP=g++
 CPPFLAGS=-Wall -g -std=c++17
 
-all:any main
+all:main test
 
-main: test_main.cpp thread_pool.cpp task.cpp result.cpp
+main: test_main.cpp thread_pool.cpp task.cpp result.cpp thread.cpp
 	${CPP} $^ ${CPPFLAGS} -pthread -o $@.out
 
-any:test_any.cpp
+test:test_any test_semaphore test_thread
+
+test_any:test_any.cpp
 	${CPP} $^ ${CPPFLAGS} -o $@.out
+
+test_semaphore:test_semaphore.cpp
+	${CPP} $^ ${CPPFLAGS} -pthread -o $@.out
+
+test_thread:test_thread.cpp thread.cpp
+	${CPP} $^ ${CPPFLAGS} -pthread -o $@.out
 
 .PHONY:clean
 clean:

@@ -26,7 +26,7 @@ public:
     // 默认构造函数
     Result() = default;
     // 使用任务进行构造
-    Result(std::shared_ptr<Task> task, const std::string& info);
+    Result(std::shared_ptr<Task> task, const std::string& info, bool is_valid = true);
     Result(const Result&) = delete;
     Result& operator=(const Result&) = delete;
     Result(Result&&) = default;
@@ -37,7 +37,7 @@ public:
 
     void get_info();
     void set_info(const std::string& info);
-    void set_res(Any&&);
+    void set_res(Any);
     Any get_res();
 
 private:
@@ -49,4 +49,6 @@ private:
     Any any_;
     // 信号量
     Semaphore sem_;
+    // 是否可以取回任务结果
+    bool is_valid_;
 };
