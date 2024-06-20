@@ -21,7 +21,7 @@ int main() {
     {
         ThreadPool pool;
         pool.start();
-        pool.set_thread_pool_mode(THREAD_MODE::MODE_FIXED);
+        pool.set_thread_pool_mode(ThreadPoolMode::MODE_FIXED);
 
         std::shared_ptr<SubTask> task1 = std::make_shared<SubTask>(1, 2);
         Result res1 = pool.submit_task(task1);
@@ -49,17 +49,18 @@ int main() {
     {
         // 两个线程，任务队列容量设置为4，理论上超过6个任务就会被提示提交失败。
         ThreadPool pool;
+        pool.set_thread_pool_mode(ThreadPoolMode::MODE_CACHED);
+        pool.set_task_queue_max_thresh_hold(4);
         pool.start(2);
-        pool.set_thread_pool_mode(THREAD_MODE::MODE_FIXED);
 
         pool.submit_task(std::make_shared<SubTask>(1, 2));
-        pool.submit_task(std::make_shared<SubTask>(1, 2));
-        pool.submit_task(std::make_shared<SubTask>(1, 2));
-        pool.submit_task(std::make_shared<SubTask>(1, 2));
-        pool.submit_task(std::make_shared<SubTask>(1, 2));
-        pool.submit_task(std::make_shared<SubTask>(1, 2));
-        pool.submit_task(std::make_shared<SubTask>(1, 2));
-        pool.submit_task(std::make_shared<SubTask>(1, 2));
+        pool.submit_task(std::make_shared<SubTask>(2, 2));
+        pool.submit_task(std::make_shared<SubTask>(3, 2));
+        pool.submit_task(std::make_shared<SubTask>(4, 2));
+        pool.submit_task(std::make_shared<SubTask>(5, 2));
+        pool.submit_task(std::make_shared<SubTask>(6, 2));
+        pool.submit_task(std::make_shared<SubTask>(7, 2));
+        pool.submit_task(std::make_shared<SubTask>(8, 2));
     }
     return 0;
 }
