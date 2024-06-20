@@ -33,7 +33,7 @@ public:
     Result& operator=(Result&&) = default;
 
     // 析构
-    ~Result() = default;
+    ~Result();
 
     void get_info();
     void set_info(const std::string& info);
@@ -51,4 +51,6 @@ private:
     Semaphore sem_;
     // 是否可以取回任务结果
     bool is_valid_;
+    // 是否已经被销毁
+    bool is_exit_;
 };

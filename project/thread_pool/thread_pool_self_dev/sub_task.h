@@ -28,7 +28,7 @@ public:
     virtual Any run() {
         double res = arg1_ + arg2_;
         std::cout << arg1_ << " + " << arg2_ << " = " << res << std::endl;
-        std::this_thread::sleep_for(std::chrono::seconds(2));
+        std::this_thread::sleep_for(std::chrono::seconds(3));
         std::cout << "job " << Task::get_task_num() << " done." << std::endl;
         return res;
     }

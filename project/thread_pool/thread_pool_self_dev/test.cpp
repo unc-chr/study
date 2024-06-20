@@ -35,13 +35,46 @@ private:
     int arg2_;
 };
 
+class Result {
+public:
+    Result() {}
+    ~Result() {}
+    void set_info(const std::string& info) {
+        info_ = info;
+    }
+    void set_res() {
+        set_info("task done!");
+    }
+private:
+    std::string info_;
+};
+
 int main() {
+#if 0
     Sub s1(1, 2);
     std::cout << s1.get_number() << std::endl;
     Sub s2(2, 3);
     std::cout << s2.get_number() << std::endl;
     Sub s3(3, 4);
     std::cout << s3.get_number() << std::endl;
+#endif
+#if 0
+    {
+        Result s1;
+        s1.set_res();
+        Result s2;
+        s2.set_res();
+        Result s3;
+        s3.set_res();
+        Result s4;
+        s4.set_res();
+    }
+#endif
+
+    std::string* s1 = new std::string("hello");
+    std::string* s2 = new std::string("hello");
+    delete s1;
+    delete s2;
 
     return 0;
 }

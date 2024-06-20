@@ -1,179 +1,236 @@
 /*================================================================
 *   Copyright (C) 2024 Goldman Ltd. All rights reserved.
 *   
-*   File：thread_pool.cpp
+*   File：threadpool.cpp
 *   Author：leekaihua
-*   Date：20240610
+*   Date：20240601
 *   Brife：
 *
 
+
+
 */
-
-#include <iostream>
-
-#include "any.h"
-#include "result.h"
-
 #include "thread_pool.h"
 
-const int TASK_QUEUE_CAPACITY = 4;
-const int THREAD_WORKERS_MAX_CAPACITY = 2;
-const int THREAD_MAX_IDLE_TIME = 60;    // 单位 秒
+#include <functional>
+#include <iostream>
+#include <thread>
 
-ThreadPool::ThreadPool() {
-    task_queue_capacity_ = TASK_QUEUE_CAPACITY;
-    task_queue_curr_size_ = 0;
-    thread_workers_max_capacity_ = THREAD_WORKERS_MAX_CAPACITY;
-    thread_workers_init_size_ = 0;
-    thread_workers_curr_size_ = 0;
-    thread_workers_idle_size_ = 0;
-    thread_pool_mode_ = THREAD_MODE::MODE_FIXED;
-    is_running_ = false;
+// 任务数量上限，开源的线程池一般是 INT32_MAX
+const int TASK_MAX_THRESHHOLD = 100;
+// 线程池线程数上限，依照资源合理设置
+// 习惯上初始线程数等于 CPU 核数
+const int THREAD_WORKERS_MAX_SIZE = 10;
+// 线程空闲时间上限，这里设置的 60s
+// 测试的时候快速看结果，可以设置 10s
+const int THREAD_MAX_IDLE_TIME = 10;  // 单位：秒
+
+ThreadPool::ThreadPool()
+        : thread_workers_init_size_(4)
+        , thread_workers_idle_size_(0)
+        , thread_workers_max_size_(THREAD_WORKERS_MAX_SIZE)
+        , thread_workers_curr_size_(0)
+        , task_size_(0)
+        , task_queue_max_size_(TASK_MAX_THRESHHOLD)
+        , pool_mode_(ThreadPoolMode::MODE_FIXED)
+        , is_pool_running_(false)
+{
+    std::cout << task_queue.size() << std::endl;
 }
 
 ThreadPool::~ThreadPool() {
-    std::cerr << "ThreadPool destroy begin ..." << std::endl;
-    is_running_ = false;
+    is_pool_running_ = false;
+    std::unique_lock<std::mutex> lock(task_queue_mtx);
+    // 线程有两种状态（1）阻塞（2）执行任务中
+    // 唤醒所有的线程，
+    // 如果还有任务没有执行完毕，则执行任务。
+    // 如果任务执行完毕，任务队列为空，那么就可以析构工作线程了。
+    not_empty.notify_all();
 
-    std::unique_lock<std::mutex> lock(mtx);
-    // 通知所有的线程，执行一遍任务
-    // 1 获取到任务的就赶紧执行
-    // 2 没获取到任务的，判断 is_running_ 的状态并退出
-    cv_not_empty.notify_all();
-    // 所有任务执行完毕，队列为空，可以退出
-    cv_exit_.wait(lock, [&]()->bool {return task_queue_curr_size_ == 0;});
-    std::cerr << "ThreadPool destroy finished..." << std::endl;
+    // 等待线程池中所有的线程返回
+    // 条件变量 exit_cond 有通知，且 thread_workers.size() == 0
+    // 那么就是可以退出了。
+    exit_cond_.wait(lock, [&]()->bool {return thread_workers.size() == 0;});
 }
 
-void ThreadPool::set_thread_pool_mode(THREAD_MODE mode) {
-    // 线程池启动后，不允许更改状态
-    if (is_running_ == true) {
+void ThreadPool::set_thread_pool_mode(ThreadPoolMode mode) {
+    // 线程池启动之后，不允许再次设置模式
+    if (check_running_state()) {
         return;
     }
-    thread_pool_mode_ = mode;
+    pool_mode_ = mode;
 }
 
-void ThreadPool::set_thread_workers_capacity(int task_queue_capacity) {
-    thread_workers_max_capacity_ = task_queue_capacity;
+void ThreadPool::set_task_queue_max_thresh_hold(int thresh_hold) {
+    task_queue_max_size_ = thresh_hold;
 }
 
-void ThreadPool::set_task_queue_capacity(int task_queue_capacity) {
-    task_queue_capacity_ = task_queue_capacity;
-}
-
-void ThreadPool::start(size_t thread_workers_init_size) {
-    // 更改线程池的状态
-    is_running_ = true;
-    // 创建工作线程
-    for (size_t i = 0; i < thread_workers_init_size; i++) {
-        std::unique_ptr<Thread> ptr = 
-                std::make_unique<Thread>(std::bind(&ThreadPool::thread_work, this, std::placeholders::_1));
-        int thread_id = ptr->get_id();
-        thread_workers_.emplace(thread_id, std::move(ptr));
+void ThreadPool::set_thread_workers_max_size(int size) {
+    if (check_running_state()) {
+        return;
     }
-    // 启动工作线程
-    for (size_t i = 0; i < thread_workers_init_size; i++) {
-        thread_workers_[i]->start();
+    if (pool_mode_ == ThreadPoolMode::MODE_CACHED) {
+        thread_workers_max_size_ = size;
     }
-    thread_workers_init_size_ = thread_workers_init_size;
-    thread_workers_idle_size_ = thread_workers_init_size;
-    thread_workers_curr_size_ = thread_workers_init_size;
 }
 
-Result ThreadPool::submit_task(std::shared_ptr<Task> task) {
-    // cached 模式下，可能需要增加线程数量
-    if (thread_pool_mode_ == THREAD_MODE::MODE_CACHED
-            && task_queue_curr_size_ > thread_workers_idle_size_
-            && thread_workers_curr_size_ < thread_workers_max_capacity_) {
-        std::cout << ">>> create new thread <<<" << std::endl;
-        std::unique_ptr<Thread> ptr = 
-                std::make_unique<Thread>(std::bind(&ThreadPool::thread_work, this, std::placeholders::_1));
+Result ThreadPool::submit_task(std::shared_ptr<Task> sp) {
+    // 获取锁
+    std::unique_lock<std::mutex> lock(task_queue_mtx);
+
+    // 线程的通信，等待任务队列有空闲的槽位
+    // 用户提交任务，最长阻塞时间不能超过 1s；否则判断提交任务失败，返回。
+    if (!not_full.wait_for(lock, std::chrono::seconds(1),
+            [&]()->bool {
+                return task_queue.size() < task_queue_max_size_;})) {
+        std::cerr << "task queue is full, submit task fail!" << std::endl;
+        return Result(sp, "submit failed", false);
+    }
+    
+    // 如果有空槽位，将任务放到任务队列中
+    task_queue.emplace(sp);
+    task_size_++;
+
+    // 使用 notEmpty 条件变量通知消费者，有任务可以执行了
+    not_empty.notify_all();
+
+    // cached 模式下，任务处理比较紧急 适用场景：小而快的任务
+    // 需要根据任务数量和空闲线程的数量，判断是否需要创建新的线程出来
+    if (pool_mode_ == ThreadPoolMode::MODE_CACHED 
+            && task_size_ > thread_workers_idle_size_
+            && thread_workers_curr_size_ < thread_workers_max_size_) {
+        // 创建额外的新线程
+        std::cout << ">>> create new thread..." << std::endl;
+        auto ptr = std::make_unique<Thread>(
+                std::bind(&ThreadPool::thread_func, this, std::placeholders::_1));
         int thread_id = ptr->get_id();
-        thread_workers_.emplace(thread_id, std::move(ptr));
-        thread_workers_[thread_id]->start();
+        thread_workers.emplace(thread_id, std::move(ptr));
+        thread_workers[thread_id]->start();
+        // 修改线程个数相关的变量
         thread_workers_curr_size_++;
         thread_workers_idle_size_++;
     }
-    {
-        // 先抢锁
-        std::unique_lock<std::mutex> lock(mtx);
-        // 任务可能会提交失败，场景是：
-        // 所有的线程都在工作，任务队列已满，超过1s未能等候到任务队列不满的通知
-        if(!cv_not_full.wait_for(lock, 
-                            std::chrono::seconds(1),
-                            [&]()->bool {return !is_task_queue_full();})) {
-            std::cerr << "submit failed" << std::endl;
-            return Result(task, "submit failed!", false);
-        }
-<<<<<<< HEAD
-        // 提交任务
-        task_queue_.emplace(task);
-        task_queue_curr_size_++;
-=======
-        task_queue_.emplace(task);
->>>>>>> ea0b157a383426cc37a838bc57a6cd57af61813b
-        // 出作用域，释放锁
-    }
-    // 通知消费者
-    cv_not_empty.notify_all();
-    // 这行不能用，后续再研究
-    // return std::move(Result(task, "submit success!"));
-    return Result(task, "submit success!");
+
+    // 返回任务的 Result 对象
+    return Result(sp, "sutmit ok");
 }
 
-void ThreadPool::thread_work(int thread_id) {
-    // 线程需要一直运行
-    auto last_time = std::chrono::high_resolution_clock::now();
+void ThreadPool::start(int thread_workers_init_size) {
+    // 设置线程池的启动状态
+    is_pool_running_ = true;
+
+    // 记录初始线程个数
+    thread_workers_init_size_ = thread_workers_init_size;
+    thread_workers_curr_size_ = thread_workers_init_size;
+
+    // 集中创建线程对象
+    for (int i = 0; i < thread_workers_init_size; i++) {
+        auto ptr = std::make_unique<Thread>(
+                std::bind(&ThreadPool::thread_func, this, std::placeholders::_1));
+        int thread_id = ptr->get_id();
+        thread_workers.emplace(thread_id, std::move(ptr));
+    }
+
+    // 集中启动所有线程
+    for (int i = 0; i < thread_workers_init_size; i++) {
+        // 执行一个线程函数
+        thread_workers[i]->start();
+        // 记录初始空闲线程的数量
+        thread_workers_idle_size_++;
+    }
+}
+
+bool ThreadPool::check_running_state() const {
+    return is_pool_running_;
+}
+
+void ThreadPool::thread_func(int thread_id) {
+    // 死循环，执行工作的线程要一直待命
+    auto last_time = std::chrono::high_resolution_clock().now();
+
+    // 所有任务必须执行完成，线程池才可以回收所有线程资源
     while (true) {
-        std::shared_ptr<Task> task;
+        std::shared_ptr<Task> job;
         {
-            // 先抢锁
-            std::unique_lock<std::mutex> lock(mtx);
-            // 如果线程池要结束，且当前已经无任务，那么销毁当前线程
-            while (is_task_queue_empty()) {
-                if (is_running_ == false) {
-                    thread_workers_.erase(thread_id);
+            // 获取锁
+            std::cout << "tid: " << std::this_thread::get_id() << " waitting lock" << std::endl;
+            std::unique_lock<std::mutex> lock(task_queue_mtx);
+            std::cout << "tid: " << std::this_thread::get_id() << " got a lock" << std::endl;
+            std::cout << "tid: " << std::this_thread::get_id()
+                    << " trying get a job." << std::endl;
+
+            while (task_queue.size() == 0) {
+                if (!is_pool_running_) {
+                    // 如果是执行任务中的线程，执行完发现 is_pool_running_ 为 false。
+                    // 进入这个逻辑执行线程的销毁
+                    thread_workers.erase(thread_id);
                     thread_workers_curr_size_--;
                     thread_workers_idle_size_--;
-                    std::cout << "current thread: " << thread_id << " finished!" << std::endl;
-                    cv_exit_.notify_all();
-                    // 当前线程结束了。
+                    std::cout << "thread_id: " << std::this_thread::get_id() 
+                            << " finish job, and destroyed." << std::endl;
+                    exit_cond_.notify_all();
                     return;
                 }
-                // 如果线程池正常运行中
-                if (thread_pool_mode_ == THREAD_MODE::MODE_CACHED) {
-                    // 每隔一秒，就确认是否达到了60s等待限制
-                    if (std::cv_status::timeout == cv_not_empty.wait_for(lock, std::chrono::seconds(1))) {
-                        auto now = std::chrono::high_resolution_clock::now();
+
+                // cached 模式下，有可能已经创建了很多线程
+                // 空闲时间超过 60s，应该把多余的线程(超过thread_workers_init_size的)结束回收掉
+                if (pool_mode_ == ThreadPoolMode::MODE_CACHED) {
+                    // 条件变量，如果返回是超时导致的，那么判断超时是否达到了60秒。
+                    if (std::cv_status::timeout 
+                            == not_empty.wait_for(lock, std::chrono::seconds(1))) {
+                        auto now = std::chrono::high_resolution_clock().now();
                         auto dur = std::chrono::duration_cast<std::chrono::seconds>(now - last_time);
                         if (dur.count() >= THREAD_MAX_IDLE_TIME
                                 && thread_workers_curr_size_ > thread_workers_init_size_) {
-                            thread_workers_.erase(thread_id);
+                            // 回收当前线程
+                            // 记录线程数量的相关变量值的修改
+                            // 把线程对象从线程容器中剔除，但是没有办法区分 threadFunc <=> thread 对象
+                            // thread id => thread 对象 => 删除
+                            thread_workers.erase(thread_id);
                             thread_workers_curr_size_--;
                             thread_workers_idle_size_--;
-                            std::cout << "current thread: " << thread_id << " finished!" << std::endl;
-                            // 当前线程结束了。
+                            std::cout << "thread_id: " << std::this_thread::get_id() 
+                                    << " exit." << std::endl;
                             return;
                         }
+                    } else {
+                        // 如果返回是条件变量通知任务队列非空导致的，那么需要继续执行任务。
+                        // 此时退出 while 循环，开始取任务并执行
                     }
                 } else {
-                    cv_not_empty.wait(lock);
+                    // 等待 not_empty 条件变量通知
+                    not_empty.wait(lock);
                 }
             }
-            // 任务执行可能非常耗时，所以尽快释放锁
-            task = task_queue_.front();
-            task_queue_.pop();
-            task_queue_curr_size_--;
+
+            // 如果不空，取一个任务出来
+            job = task_queue.front();
+            task_queue.pop();
+            task_size_--;
             thread_workers_idle_size_--;
+            std::cout << "tid: " << std::this_thread::get_id()
+                    << " got a job." << std::endl;
+
+            // 如果依然有剩余任务，继续通知其他线程执行任务
+            if (task_queue.size() > 0) {
+                not_empty.notify_all();
+            }
+
+            // 取出一个任务，通知生产者可以继续提交生产任务
+            not_full.notify_all();
+
+            // 出作用域，及时释放锁
         }
-        // 通知生产者可以提交任务
-        cv_not_full.notify_all();
-        if (task == nullptr) {
-            std::cerr << "error: task = nullptr!" << std::endl;
-        } else {
-            task->exec();
+        // 当前线程负责执行这个任务
+        if (job != nullptr) {
+            // 执行任务，把任务的返回值通过 set_value 方法给到 Result
+            job->exec();
         }
+
+        // 更新线程执行完任务的时间
+        last_time = std::chrono::high_resolution_clock().now();
+        // 成功执行完一个任务
         thread_workers_idle_size_++;
-        last_time = std::chrono::high_resolution_clock::now();
     }
+
 }
