@@ -54,7 +54,7 @@ void Result::set_res(Any any) {
 //  获取任务结果
 Any Result::get_res() {
     // 如果任务提交失败，is_valid_ 为 false，那么无法获取任务
-    if (is_valid_) {
+    if (!is_valid_) {
         return "";
     }
     if (!is_exit_) {

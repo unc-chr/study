@@ -83,7 +83,9 @@ Result ThreadPool::submit_task(std::shared_ptr<Task> sp) {
     if (!not_full.wait_for(lock, std::chrono::seconds(1),
             [&]()->bool {
                 return task_queue.size() < task_queue_max_size_;})) {
-        std::cerr << "task queue is full, submit task fail!" << std::endl;
+        std::cerr << "task queue is full, task "
+                << sp->get_task_num()
+                << " submit task fail!" << std::endl;
         return Result(sp, "submit failed", false);
     }
     
@@ -153,11 +155,7 @@ void ThreadPool::thread_func(int thread_id) {
         std::shared_ptr<Task> job;
         {
             // 获取锁
-            std::cout << "tid: " << std::this_thread::get_id() << " waitting lock" << std::endl;
             std::unique_lock<std::mutex> lock(task_queue_mtx);
-            std::cout << "tid: " << std::this_thread::get_id() << " got a lock" << std::endl;
-            std::cout << "tid: " << std::this_thread::get_id()
-                    << " trying get a job." << std::endl;
 
             while (task_queue.size() == 0) {
                 if (!is_pool_running_) {
@@ -166,8 +164,6 @@ void ThreadPool::thread_func(int thread_id) {
                     thread_workers.erase(thread_id);
                     thread_workers_curr_size_--;
                     thread_workers_idle_size_--;
-                    std::cout << "thread_id: " << std::this_thread::get_id() 
-                            << " finish job, and destroyed." << std::endl;
                     exit_cond_.notify_all();
                     return;
                 }
@@ -208,8 +204,6 @@ void ThreadPool::thread_func(int thread_id) {
             task_queue.pop();
             task_size_--;
             thread_workers_idle_size_--;
-            std::cout << "tid: " << std::this_thread::get_id()
-                    << " got a job." << std::endl;
 
             // 如果依然有剩余任务，继续通知其他线程执行任务
             if (task_queue.size() > 0) {
