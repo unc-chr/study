@@ -48,7 +48,7 @@ public:
 
     // emplace();
     // emplace_back();
-    void push_back(T item);
+    void push_back(const T& item);
     void pop_back();
     // append_range();
 
@@ -181,11 +181,11 @@ T& vector<T, Alloc>::operator[](size_t pos) const {
 }
 
 template <typename T, typename Alloc>
-void vector<T, Alloc>::push_back(T item) {
+void vector<T, Alloc>::push_back(const T& item) {
     if (full()) {
         expand_space();
     }
-    *_last = item;
+    _allocator.construct(_last, item);
     _last++;
 }
 
