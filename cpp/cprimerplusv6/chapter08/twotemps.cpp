@@ -17,6 +17,9 @@ void diy_swap(T &a, T &b);
 template <typename T>
 void diy_swap(T *a, T *b, int n);
 
+template <typename T, typename U>
+void diy_swap(T* a, T* b, U c, int n);
+
 void show(int a[]);
 const int LIM = 8;
 
@@ -38,6 +41,12 @@ int main(){
     show(d1);
     show(d2);
 
+    double u = 1.001;
+    cout << "diy_swapped array again:\n";
+    diy_swap(d1, d2, u, LIM);
+    show(d1);
+    show(d2);
+
     return 0;
 }
 
@@ -50,13 +59,25 @@ void diy_swap(T &a, T &b) {
 }
 
 template <typename T>
-void diy_swap(T a[], T b[], int n) {
+void diy_swap(T* a, T* b, int n) {
     T temp;
     for (int i = 0; i < n; i++) {
         temp = a[i];
         a[i] = b[i];
         b[i] = temp;
     }
+}
+
+template <typename T, typename U>
+void diy_swap(T* a, T* b, U c, int n) {
+    T temp;
+    for (int i = 0; i < n; i++) {
+        temp = a[i];
+        a[i] = b[i];
+        b[i] = temp;
+    }
+    std::cout << c << std::endl;
+    std::cout << "this T and U instance" << std::endl;
 }
 
 void show(int a[]) {
