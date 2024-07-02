@@ -19,6 +19,9 @@ test: tv
 tv:test_vector.cpp
 	${CPP} $^ ${CPP_DEBUG_FLAGS} -lmyexception -o $@.out
 
+ts:test_string.cpp
+	${CPP} $^ ${CPP_DEBUG_FLAGS} -o $@.out
+
 .PHONY:clean
 clean:
 	rm *.out

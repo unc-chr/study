@@ -10,5 +10,39 @@
 #
 #================================================================
 
-sudo cp vector.h /usr/local/include/lee/stl/
-sudo cp allocator.h /usr/local/include/lee/stl/
+function deploy_all {
+    deploy_allocator;
+    deploy_vector;
+    deploy_string;
+}
+
+function deploy_allocator {
+    sudo cp allocator.h /usr/local/include/lee/stl/
+}
+
+function deploy_vector {
+    sudo cp vector.h /usr/local/include/lee/stl/
+}
+
+function deploy_string {
+    sudo cp string.h /usr/local/include/lee/stl/
+}
+
+function help {
+    echo "attention: use shell like this"
+    echo "sh/bash deploy.sh module_name"
+}
+
+module=$1
+if [ -z "${module}" ];then
+    help;
+    exit;
+fi
+
+if [ ${module} == "vector" ];then
+    deploy_vector;
+elif [ ${module} == "allocator" ];then
+    deploy_allocator;
+elif [ "${module}" == "string" ];then
+    deploy_string;
+fi
