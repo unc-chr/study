@@ -69,5 +69,17 @@ int main() {
     strcpy(buf, str6.c_str());
     cout << "buf: " << buf << endl;
 
+    // test iterator
+    // string::iterator iter = str6.begin();
+    for (auto iter = str6.begin(); iter != str6.end(); iter++) {
+        cout << *iter << " ";
+    }
+    cout << endl;
+
+    // test iterator with for each
+    for (char ch : str6) {
+        cout << ch << " ";
+    }
+    cout << endl;
     return 0;
 }
