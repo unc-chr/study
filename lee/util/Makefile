@@ -11,17 +11,21 @@
 CPP=g++
 CPPFLAGS=-std=c++11
 CPP_DEBUG_FLAGS=-Wall -g -std=c++11
+SHARED_FLAGS=-fPIC -shared
 
-all:test
+all:test shared
 
-test: tv
+test: tcn
 
-tv:test_vector.cpp
-	${CPP} $^ ${CPP_DEBUG_FLAGS} -lmyexception -o $@.out
+shared:complexnum
 
-ts:test_string.cpp
+tcn:test_complex_number.cpp complex_number.cpp
 	${CPP} $^ ${CPP_DEBUG_FLAGS} -o $@.out
+
+complexnum: complex_number.cpp
+	${CPP} $^ ${SHARED_FLAGS} -o lib$@.so
 
 .PHONY:clean
 clean:
+	rm *.so
 	rm *.out

@@ -18,10 +18,17 @@ class MyTest {
 public:
     MyTest();
     ~MyTest();
+    MyTest(const MyTest& other);
+    MyTest& operator=(const MyTest& other);
+    MyTest(MyTest&& other);
+    MyTest& operator=(MyTest&& other);
+    void set_data_int(int data);
     void report();
 private:
     static int count;
-    int order_;
+    int _order;
+    int _data_int;
+    int* _data_int_p;
 };
 }
 }

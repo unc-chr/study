@@ -1,11 +1,9 @@
-
-
 #================================================================
 #   Copyright (C) 2024 Goldman Ltd. All rights reserved.
 #   
 #   File：Makefile
 #   Author：leekaihua
-#   Date：20240629
+#   Date：20240624
 #   Brife：
 #
 #================================================================
@@ -15,19 +13,10 @@ CPPFLAGS=-Wall -g -std=c++11
 
 all: test
 
-test: to th tvpf
+test:tnd 
 
-to: test_override.cpp
-	${CPP} $^ ${CPPFLAGS} -o $@.out
-
-th: test_hide.cpp
-	${CPP} $^ ${CPPFLAGS} -o $@.out
-
-tvpf: test_virtual_private_func.cpp
-	${CPP} $^ ${CPPFLAGS} -o $@.out
-
-tvfptf: test_vfptf.cpp
-	${CPP} $^ ${CPPFLAGS} -o $@.out
+tnd: test_new_delete.cpp
+	${CPP} $^ -o $@.out
 
 .PHONY:clean
 clean:
