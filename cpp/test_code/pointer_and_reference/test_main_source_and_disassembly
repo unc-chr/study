@@ -1,0 +1,35 @@
+00000000004004f2 <main>:
+// #include <iostream>
+
+// using std::cout;
+// using std::endl;
+
+int main() {
+  4004f2:	55                   	push   %rbp
+  4004f3:	48 89 e5             	mov    %rsp,%rbp
+    int a = 10;
+  4004f6:	c7 45 ec 0a 00 00 00 	movl   $0xa,-0x14(%rbp)
+    int* p_a = &a;
+  4004fd:	48 8d 45 ec          	lea    -0x14(%rbp),%rax
+  400501:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    int& r_a = a;
+  400505:	48 8d 45 ec          	lea    -0x14(%rbp),%rax
+  400509:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+
+    a = 20;
+  40050d:	c7 45 ec 14 00 00 00 	movl   $0x14,-0x14(%rbp)
+    // cout << a << " " << *p_a << " " << r_a << endl;
+
+    *p_a = 30;
+  400514:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+  400518:	c7 00 1e 00 00 00    	movl   $0x1e,(%rax)
+    // cout << a << " " << *p_a << " " << r_a << endl;
+
+    r_a = 40;
+  40051e:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+  400522:	c7 00 28 00 00 00    	movl   $0x28,(%rax)
+    // cout << a << " " << *p_a << " " << r_a << endl;
+  400528:	b8 00 00 00 00       	mov    $0x0,%eax
+  40052d:	5d                   	pop    %rbp
+  40052e:	c3                   	retq   
+  40052f:	90                   	nop
