@@ -23,6 +23,8 @@ public:
     string(const char* p = nullptr);
     string(const string& other);
     string& operator=(const string& other);
+    string(string&& other);
+    string& operator=(string&& other);
     ~string();
     
     string operator+(const string& other) const;
@@ -80,36 +82,50 @@ string& string::operator=(const string& other) {
     return *this;
 }
 
+string::string(string&& other) {
+    _pstr = other._pstr;
+    other._pstr = nullptr;
+}
+
+string& string::operator=(string&& other) {
+    if (this == &other) {
+        return *this;
+    }
+    _pstr = other._pstr;
+    other._pstr = nullptr;
+    return *this;
+}
+
 string::~string() {
     delete[] _pstr;
     _pstr = nullptr;
 }
 
 string string::operator+(const string& other) const {
-    char* p = new char[strlen(other._pstr) + strlen(_pstr) + 1];
-    strcpy(p, _pstr);
-    strcpy(p + strlen(_pstr), other._pstr);
-    string temp(p);
-    delete[] p;
+    string temp;
+    delete[] temp._pstr;
+    temp._pstr = new char[strlen(other._pstr) + strlen(_pstr) + 1];
+    strcpy(temp._pstr, _pstr);
+    strcpy(temp._pstr + strlen(_pstr), other._pstr);
     return temp;
 }
 
 string string::operator+(const char* other) const {
-    char* p = new char[strlen(_pstr) + strlen(other) + 1];
-    strcpy(p, _pstr);
-    strcpy(p + strlen(_pstr), other);
-    string temp(p);
-    delete[] p;
+    string temp;
+    delete[] temp._pstr;
+    temp._pstr = new char[strlen(other) + strlen(_pstr) + 1];
+    strcpy(temp._pstr, _pstr);
+    strcpy(temp._pstr + strlen(_pstr), other);
     return temp;
 }
 
 
 string operator+(const char* other, const string& str) {
-    char* p = new char[strlen(other) + strlen(str._pstr) + 1];
-    strcpy(p, other);
-    strcpy(p + strlen(other), str._pstr);
-    string temp(p);
-    delete[] p;
+    string temp;
+    delete[] temp._pstr;
+    temp._pstr = new char[strlen(other) + strlen(str._pstr) + 1];
+    strcpy(temp._pstr, str._pstr);
+    strcpy(temp._pstr + strlen(str._pstr), other);
     return temp;
 }
 
