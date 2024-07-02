@@ -1,0 +1,6 @@
+class complex number
+    intro
+        A complex number class for C++ features learning.
+        Need to introduce more complex number features so be a real complex number.
+    todo:
+        test sute and test case
