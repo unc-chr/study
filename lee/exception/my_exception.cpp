@@ -24,5 +24,13 @@ const char* out_of_vector_range::what() const noexcept {
     return _message.c_str();
 }
 
+empty_container::empty_container(const char* msg) {
+    _msg = msg;
+}
+
+const char* empty_container::what() const noexcept {
+    return _msg;
+}
+
 }
 }
