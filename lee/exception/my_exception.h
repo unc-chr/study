@@ -27,5 +27,14 @@ private:
     std::string _message;
 };
 
+class empty_container : public std::exception {
+public:
+    empty_container (const char* msg);
+    ~empty_container () = default;
+    const char* what() const noexcept override;
+private:
+    const char* _msg;
+};
+
 }
 }

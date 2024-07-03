@@ -14,6 +14,7 @@ function deploy_all {
     deploy_allocator;
     deploy_vector;
     deploy_string;
+    deploy_queue;
 }
 
 function deploy_allocator {
@@ -28,9 +29,14 @@ function deploy_string {
     sudo cp string.h /usr/local/include/lee/stl/
 }
 
+function deploy_queue {
+    sudo cp queue.h /usr/local/include/lee/stl/
+}
+
 function help {
     echo "attention: use shell like this"
-    echo "sh/bash deploy.sh module_name"
+    echo "Usage: $0 [module_name]"  
+    echo "Available modules: vector, allocator, string, queue"
 }
 
 module=$1
@@ -45,4 +51,6 @@ elif [ ${module} == "allocator" ];then
     deploy_allocator;
 elif [ "${module}" == "string" ];then
     deploy_string;
+elif [ "${module}" == "queue" ];then
+    deploy_queue;
 fi
