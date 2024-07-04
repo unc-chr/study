@@ -29,12 +29,18 @@ int main() {
     queue<int> q;
     q.push(0);
     q.push(1);
-    q.push(2);
-    q.push(3);
-    q.push(4);
+    // q.push(2);
+    // q.push(3);
+    // q.push(4);
     // test front function
     int res = q.front();
     cout << res << endl;
+
+    // // test memory allocate and free
+    // for (int i = 0; i < 5; i++) {
+    //     q.push(i);
+    //     q.pop();
+    // }
 
     return 0;
 }

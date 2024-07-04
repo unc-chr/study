@@ -53,4 +53,6 @@ elif [ "${module}" == "string" ];then
     deploy_string;
 elif [ "${module}" == "queue" ];then
     deploy_queue;
+else
+    help
 fi
