@@ -12,6 +12,8 @@
 */
 #pragma once
 
+#include <cstdlib>
+
 #include "lee/exception/my_exception.h"
 using lee::exception::empty_container;
 
@@ -27,13 +29,21 @@ public:
     void pop();
     T& front();
     T& back();
+    void clear_pool();
 private:
     struct node {
         T _data;
         node* _pre;
         node* _next;
+        static const int _OBJ_POOL_SIZE;
+        static node* _pool_mem;
+
         node(T data = T(), node* pre = nullptr, node* next = nullptr);
         ~node();
+
+        void* operator new(size_t size);
+        void operator delete(void* p);
+
     };
 
     node* _front;
@@ -63,8 +73,10 @@ queue<T>::~queue() {
         curr = curr->_next;
         delete temp;
     }
-    delete _front;
     delete _rear;
+    delete _front;
+    _front = _rear = nullptr;
+    clear_pool();
 }
 
 template <typename T>
@@ -103,6 +115,12 @@ T& queue<T>::back() {
 }
 
 template <typename T>
+const int queue<T>::node::_OBJ_POOL_SIZE = 10000;
+
+template <typename T>
+typename queue<T>::node* queue<T>::node::_pool_mem = nullptr;
+
+template <typename T>
 queue<T>::node::node(T data, node* pre, node* next)
         : _data(data)
         , _pre(pre)
@@ -113,6 +131,34 @@ template <typename T>
 queue<T>::node::~node() {
     _pre = nullptr;
     _next = nullptr;
+}
+
+template <typename T>
+void* queue<T>::node::operator new(size_t size) {
+    if (_pool_mem == nullptr) {
+        _pool_mem = (node*)malloc(sizeof(node) * _OBJ_POOL_SIZE);
+        // _pool_mem = (node*)new char[_OBJ_POOL_SIZE * sizeof(node)];
+        node* p = _pool_mem;
+        for (; p < _pool_mem + _OBJ_POOL_SIZE - 1; ++p) {
+            p->_next = p + 1;
+        }
+        p->_next = nullptr;
+    }
+    node* res = _pool_mem;
+    _pool_mem = _pool_mem->_next;
+    return res;
+}
+
+template <typename T>
+void queue<T>::node::operator delete(void* p) {
+    node* del = (node*)p;
+    del->_next = _pool_mem;
+    _pool_mem = del;
+}
+
+template <typename T>
+void queue<T>::clear_pool() {
+    free(node::_pool_mem);
 }
 
 }
