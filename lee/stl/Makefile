@@ -14,7 +14,7 @@ CPP_DEBUG_FLAGS=-Wall -g -std=c++11
 
 all:test
 
-test: tv ts tq tstack
+test: tv ts tq tstack test tm
 
 tv:test_vector.cpp
 	${CPP} $^ ${CPP_DEBUG_FLAGS} -lmyexception -o $@.out
@@ -26,6 +26,12 @@ tq: test_queue.cpp
 	${CPP} $^ ${CPP_DEBUG_FLAGS} -lmyexception -o $@.out
 
 tstack: test_stack.cpp
+	${CPP} $^ ${CPP_DEBUG_FLAGS} -o $@.out
+
+tset: test_set.cpp
+	${CPP} $^ ${CPP_DEBUG_FLAGS} -o $@.out
+
+tm: test_map.cpp
 	${CPP} $^ ${CPP_DEBUG_FLAGS} -o $@.out
 
 .PHONY:clean
